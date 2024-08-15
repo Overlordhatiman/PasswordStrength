@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, Input, OnChanges } from '@angular/core';
+import { PasswordStrengthService } from '../service/password-strength.service';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -8,51 +9,27 @@ import { CommonModule } from '@angular/common';
   templateUrl: './password-strength.component.html',
   styleUrls: ['./password-strength.component.css']
 })
-export class PasswordStrengthComponent {
-  password: string = '';
+export class PasswordStrengthComponent implements OnChanges {
+  @Input() password: string = '';
   strengthClass: string[] = ['gray', 'gray', 'gray'];
 
-  onPasswordInput(event: any): void {
-    const inputValue = event.target.value;
-    this.password = inputValue;
-    this.calculateStrength(inputValue);
+  constructor(private passwordStrengthService: PasswordStrengthService) {}
+
+  ngOnChanges(): void {
+    this.updateStrength();
   }
 
-  private calculateStrength(password: string): void {
-    this.strengthClass = ['gray', 'gray', 'gray'];
-    if (this.isStrong(password)) {
+  private updateStrength(): void {
+    if (this.password.length === 0) {
+      this.strengthClass = ['gray', 'gray', 'gray'];
+    } else if (this.password.length < 8) {
+      this.strengthClass = ['red', 'red', 'red'];
+    } else if (this.passwordStrengthService.isStrong(this.password)) {
       this.strengthClass = ['green', 'green', 'green'];
-    } 
-    else if (this.isMedium(password)) {
+    } else if (this.passwordStrengthService.isMedium(this.password)) {
       this.strengthClass = ['yellow', 'yellow', 'gray'];
-    }
-    else if(this.isEasy(password)) {
-      this.strengthClass = ['red', 'gray', 'gray'];
-    }
-    else if (password.length < 8) {
+    } else if (this.passwordStrengthService.isEasy(this.password)) {
       this.strengthClass = ['red', 'gray', 'gray'];
     }
   }
-
-  private isEasy(password: string): boolean {
-    return (
-      /^[a-zA-Z]+$/.test(password) || // Only letters
-      /^[\d]+$/.test(password) || // Only digits
-      /^[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]+$/.test(password) // Only symbols
-    );
-  }
-
-  private isMedium(password: string): boolean {
-    return (
-      /([a-zA-Z].*[\d]|[\d].*[a-zA-Z])/.test(password) || // Letters and digits
-      /([a-zA-Z].*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]|[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?].*[a-zA-Z])/.test(password) || // Letters and symbols
-      /([\d].*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]|[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?].*[\d])/.test(password) // Digits and symbols
-    );
-  }
-  
-  private isStrong(password: string): boolean {
-    return /^(?=.*[A-Z])(?=.*[!@#$&*])(?=.*[0-9])(?=.*[a-z]).{8,}$/.test(password);
-  }
-  
-  
 }
